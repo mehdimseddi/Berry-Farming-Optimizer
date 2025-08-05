@@ -17,6 +17,6 @@ engine = create_async_engine(DATABASE_URL, echo=True)
 async def test():
     async with engine.begin() as conn:
         result = await conn.exec_driver_sql("SELECT 1")
-        print("Success:", result.scalar())
+        print("✅ Success:", result.scalar())
 
 asyncio.run(test())

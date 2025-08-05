@@ -1,0 +1,56 @@
+-- Enable UUID extension
+create extension if not exists "uuid-ossp";
+
+-- Accounts
+create table accounts (
+  id uuid primary key default uuid_generate_v4(),
+  character_name text,
+  parent_account_name text,
+  plain_spicy int not null default 0,
+  very_spicy int not null default 0,
+  very_bitter int not null default 0,
+  plain_bitter int not null default 0,
+  very_sweet int not null default 0,
+  plain_sweet int not null default 0,
+  created_at timestamptz default now()
+);
+
+-- Optimization Sessions
+create table optimization_sessions (
+  id uuid primary key default uuid_generate_v4(),
+  status text not null default 'success' check (status in ('pending', 'success', 'failed')),
+  grouping_penalty_weight int,
+  total_leppa int,
+  total_cheri int,
+  total_pecha int,
+  total_strawbst int,
+  created_at timestamptz default now()
+);
+
+-- Allocations
+create table allocations (
+  id uuid primary key default uuid_generate_v4(),
+  session_id uuid not null references optimization_sessions(id),
+  account_id uuid not null references accounts(id),
+  leppa int,
+  cheri int,
+  pecha int,
+  strawbst int,
+  final_plain_spicy int,
+  final_very_spicy int,
+  final_very_bitter int,
+  final_plain_bitter int,
+  final_very_sweet int,
+  final_plain_sweet int
+);
+
+-- Transfers
+create table transfers (
+  id uuid primary key default uuid_generate_v4(),
+  session_id uuid not null references optimization_sessions(id),
+  from_account_id uuid not null references accounts(id),
+  to_account_id uuid not null references accounts(id),
+  seed_type text not null check (seed_type in ('plain_spicy', 'very_spicy', 'very_bitter', 'plain_bitter', 'very_sweet', 'plain_sweet')),
+  amount int not null check (amount > 0),
+  created_at timestamptz default now()
+);

@@ -1,5 +1,7 @@
 # backend/db/engine.py
+from uuid import uuid4
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
+from sqlalchemy.pool import NullPool
 from sqlmodel import SQLModel
 import os
 from dotenv import load_dotenv
@@ -13,8 +15,9 @@ if not DATABASE_URL:
 # ✅ Add connect_args with asyncpg options
 engine: AsyncEngine = create_async_engine(
     DATABASE_URL,
-    echo=True,
     connect_args={
-        "statement_cache_size": 0,        # ← Critical: disables prepared statements
-    }
+            "prepared_statement_name_func": lambda: f"__asyncpg_{uuid4()}__",
+            "statement_cache_size": 0,
+            "prepared_statement_cache_size": 0,
+        },
 )

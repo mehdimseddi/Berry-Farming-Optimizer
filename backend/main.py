@@ -1,9 +1,8 @@
 # main.py
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Depends, HTTPException
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from typing import List
-import logging
 
 from .domain.entities import Account
 from .services.farming_service import FarmingService
@@ -12,8 +11,8 @@ from .core.optimizer import FarmingOptimizer
 from .schemas import AccountInput, OptimizationResponse, OptimizationRequest
 from .logger import logger
 
-from fastapi import Depends
-from .supabase_client import get_accounts, save_optimization_result, close_supabase_client
+from .db.session import get_session
+from .db.repository import get_all_accounts, save_optimization_result
 
 # Initialize components
 calculator = RatioBasedPlantCalculator()
@@ -24,9 +23,9 @@ farming_service = FarmingService(calculator, optimizer)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting up...")
+    # You can run migrations here later
     yield
     logger.info("Shutting down...")
-    await close_supabase_client()
 
 app = FastAPI(
     title="Farming Optimization API",
@@ -43,7 +42,10 @@ def read_root():
     }
 
 @app.post("/optimize", response_model=OptimizationResponse)
-async def optimize_farming(request: OptimizationRequest):
+async def optimize_farming(
+    request: OptimizationRequest,
+    session: AsyncSession = Depends(get_session)
+):
     logger.info(f"Received optimization request with {len(request.accounts)} accounts")
     try:
         accounts = [
@@ -55,17 +57,15 @@ async def optimize_farming(request: OptimizationRequest):
             )
             for i, acc in enumerate(request.accounts)
         ]
-
         result = farming_service.run(accounts, grouping_penalty_weight=request.grouping_penalty_weight)
 
-        # 🌟 Save to Supabase
+        # 🌟 Save structured result
         try:
-            # First, save accounts (or get their IDs)
-            # For now, just save result with placeholder IDs
-            account_ids = []  # Later: map saved account UUIDs
-            await save_optimization_result(request.dict(), result, account_ids)
+            # Convert account list to DB-ready format
+            await save_optimization_result(session, request.dict(), result)
+            logger.info("Optimization result saved to database.")
         except Exception as e:
-            logger.warning(f"Failed to save result to Supabase: {e}")
+            logger.warning(f"Failed to save result: {e}")
 
         return result
 
@@ -76,15 +76,17 @@ async def optimize_farming(request: OptimizationRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.get("/accounts", response_model=List[AccountInput])
-async def load_accounts():
+async def load_accounts(session: AsyncSession = Depends(get_session)):
     try:
-        accounts = await get_accounts()
-        # Map Supabase data to AccountInput
+        accounts = await get_all_accounts(session)
         return [
             AccountInput(
-                character_name=a.get("character_name"),
-                parent_account_name=a.get("parent_account_name"),
-                seeds=a.get("seeds")
+                character_name=a.character_name,
+                parent_account_name=a.parent_account_name,
+                seeds=[
+                    a.plain_spicy, a.very_spicy, a.very_bitter,
+                    a.plain_bitter, a.very_sweet, a.plain_sweet
+                ]
             )
             for a in accounts
         ]

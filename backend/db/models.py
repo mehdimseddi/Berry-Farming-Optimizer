@@ -14,6 +14,8 @@ class AccountBase(SQLModel):
     plain_sweet: int = 0
 
 class Account(AccountBase, table=True):
+    __tablename__ = "accounts"  # ← Explicitly set table name
+    
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     allocations: List["Allocation"] = Relationship(back_populates="account")
 

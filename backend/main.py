@@ -15,6 +15,8 @@ from .logger import logger
 
 from .db.session import get_session
 from .db.repository import get_all_accounts, save_optimization_result
+from sqlmodel.ext.asyncio.session import AsyncSession
+
 
 # Initialize components
 calculator = RatioBasedPlantCalculator()

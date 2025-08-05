@@ -9,4 +9,3 @@ httpx[http2]
 python-dotenv
 sqlmodel
 asyncpg
-psycopg2

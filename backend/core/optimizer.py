@@ -16,14 +16,16 @@ class FarmingOptimizer:
         num_seed_types = 6
         num_plants = 4
         max_total_seeds = sum(sum(acc.seeds) for acc in accounts)
-
+        total_per_type = np.sum([acc.seeds for acc in accounts], axis=0)  # Shape: [6]
+        logger.info(f"Total seeds available: {total_per_type}")
+        logger.info(f"Starting optimization for {num_accounts} accounts with {num_plants} plant targets.")
         # Variables
-        transfer = [[[self.model.NewIntVar(0, max_total_seeds, f"t_{i}_{j}_{s}")
+        transfer = [[[self.model.NewIntVar(0, int(total_per_type[s]), f"t_{i}_{j}_{s}")
                       for s in range(num_seed_types)]
                      for j in range(num_accounts)]
                     for i in range(num_accounts)]
 
-        final_seeds = [[self.model.NewIntVar(0, 1000, f"final_{j}_{s}")
+        final_seeds = [[self.model.NewIntVar(0, int(total_per_type[s]), f"final_{j}_{s}")
                         for s in range(num_seed_types)]
                        for j in range(num_accounts)]
 
@@ -98,5 +100,5 @@ class FarmingOptimizer:
                                for j in range(num_accounts)] for i in range(num_accounts)],
             }
             result["solution"] = solution
-        logger.info(f"Optimization status: {status}, solution: {result['solution']}")
+        logger.info(f"Optimization status: {status in [cp_model.OPTIMAL, cp_model.FEASIBLE]}, solution: {result['solution']}")
         return result

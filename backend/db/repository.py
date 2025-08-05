@@ -4,6 +4,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from typing import List
 from fastapi import HTTPException
 import uuid
+from sqlmodel import select
 
 # === ACCOUNTS ===
 async def save_accounts(session: AsyncSession, accounts_data: List[dict]) -> List[Account]:
@@ -48,7 +49,10 @@ async def save_optimization_result(
 
         # Save allocations
         for alloc in response["allocations"]:
-            account_id = uuid.UUID(alloc["account_id"])  # Assume you pass UUIDs
+            try:
+                account_id = uuid.UUID(alloc["account_id"])
+            except ValueError:
+                raise HTTPException(status_code=422, detail=f"Invalid UUID: {alloc['account_id']}")
             allocation = Allocation(
                 session_id=opt_session.id,
                 account_id=account_id,

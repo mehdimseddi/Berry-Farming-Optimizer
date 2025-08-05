@@ -1,6 +1,8 @@
 # domain/entities.py
 from dataclasses import dataclass
 from typing import List, Optional
+from uuid import UUID, uuid4
+
 
 @dataclass(frozen=True)
 class SeedRequirements:
@@ -34,3 +36,12 @@ class Account:
             raise ValueError("Seeds must be a list of 6 integers.")
         if any(s < 0 for s in self.seeds):
             raise ValueError("Seed counts cannot be negative.")
+    @classmethod
+    def create(cls, seeds: List[int], character_name: Optional[str] = None,
+               parent_account_name: Optional[str] = None) -> 'Account':
+        return cls(
+            id=uuid4(),
+            seeds=seeds,
+            character_name=character_name,
+            parent_account_name=parent_account_name
+        )

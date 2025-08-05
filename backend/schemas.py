@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 
 class AccountInput(BaseModel):
+    id: Optional[str] = None  # Can be UUID string or omitted
     seeds: List[int]  # length 6: [p_spicy, v_spicy, v_bitter, p_bitter, v_sweet, p_sweet]
     character_name: Optional[str] = None
     parent_account_name: Optional[str] = None

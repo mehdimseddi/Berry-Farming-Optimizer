@@ -1,4 +1,6 @@
 # main.py
+from uuid import uuid4
+import uuid
 from fastapi import FastAPI, Depends, HTTPException
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
@@ -48,15 +50,22 @@ async def optimize_farming(
 ):
     logger.info(f"Received optimization request with {len(request.accounts)} accounts")
     try:
-        accounts = [
-            Account(
-                id=i,
-                seeds=acc.seeds,
-                character_name=acc.character_name,
-                parent_account_name=acc.parent_account_name
+        accounts = []
+        for acc in request.accounts:
+            # Use existing ID if provided and valid, otherwise generate
+            try:
+                account_id = uuid4() if acc.id is None else uuid.UUID(acc.id)
+            except (ValueError, TypeError):
+                account_id = uuid4()
+
+            accounts.append(
+                Account(
+                    id=account_id,
+                    seeds=acc.seeds,
+                    character_name=acc.character_name,
+                    parent_account_name=acc.parent_account_name
+                )
             )
-            for i, acc in enumerate(request.accounts)
-        ]
         result = farming_service.run(accounts, grouping_penalty_weight=request.grouping_penalty_weight)
 
         # 🌟 Save structured result

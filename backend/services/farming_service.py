@@ -66,7 +66,7 @@ class FarmingService:
         seed_names = ['plain_spicy', 'very_spicy', 'very_bitter', 'plain_bitter', 'very_sweet', 'plain_sweet']
         plant_names = ['leppa', 'cheri', 'pecha', 'strawbst']
 
-        for j in range(len(accounts)):
+        for j, account in enumerate(accounts):
             plants = {}
             total = 0
             for p, name in enumerate(plant_names):
@@ -74,29 +74,27 @@ class FarmingService:
                 if count > 0:
                     plants[name] = count
                 total += count
-
             final_seeds = {seed_names[s]: sol["final_seeds"][j][s] for s in range(6)}
-
             allocations.append({
-                "account_id": j,
-                "character_name": accounts[j].character_name,
-                "parent_account_name": accounts[j].parent_account_name,
+                "account_id": str(account.id),  # ← UUID as string
+                "character_name": account.character_name,
+                "parent_account_name": account.parent_account_name,
                 "plants": plants,
                 "total_plants": total,
                 "final_seeds": final_seeds
             })
 
         transfers = []
-        for i in range(len(accounts)):
-            for j in range(len(accounts)):
+        for i, from_acc in enumerate(accounts):
+            for j, to_acc in enumerate(accounts):
                 if i == j:
                     continue
                 for s in range(6):
                     val = sol["transfers"][i][j][s]
                     if val > 0:
                         transfers.append({
-                            "from_account": i,
-                            "to_account": j,
+                            "from_account": str(from_acc.id),   # ← UUID
+                            "to_account": str(to_acc.id),       # ← UUID
                             "seed_type": seed_names[s],
                             "amount": val
                         })

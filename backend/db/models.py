@@ -14,12 +14,12 @@ class AccountBase(SQLModel):
     plain_sweet: int = 0
 
 class Account(AccountBase, table=True):
-    __tablename__ = "accounts"  # ← Explicitly set table name
-    
+    __tablename__ = "accounts"
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     allocations: List["Allocation"] = Relationship(back_populates="account")
 
 class OptimizationSession(SQLModel, table=True):
+    __tablename__ = "optimization_sessions"
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     status: str = Field(default="success", regex="^(pending|success|failed)$")
     grouping_penalty_weight: Optional[int] = None
@@ -32,9 +32,10 @@ class OptimizationSession(SQLModel, table=True):
     transfers: List["Transfer"] = Relationship(back_populates="session")
 
 class Allocation(SQLModel, table=True):
+    __tablename__ = "allocations"
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    session_id: UUID = Field(foreign_key="optimizationsession.id")
-    account_id: UUID = Field(foreign_key="account.id")
+    session_id: UUID = Field(foreign_key="optimization_sessions.id")  # ✅ Fixed
+    account_id: UUID = Field(foreign_key="accounts.id")                # ✅ Fixed
     leppa: Optional[int] = None
     cheri: Optional[int] = None
     pecha: Optional[int] = None
@@ -50,11 +51,13 @@ class Allocation(SQLModel, table=True):
     session: OptimizationSession = Relationship(back_populates="allocations")
 
 class Transfer(SQLModel, table=True):
+    __tablename__ = "transfers"
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    session_id: UUID = Field(foreign_key="optimizationsession.id")
-    from_account_id: UUID = Field(foreign_key="account.id")
-    to_account_id: UUID = Field(foreign_key="account.id")
+    session_id: UUID = Field(foreign_key="optimization_sessions.id")  # ✅ Fixed
+    from_account_id: UUID = Field(foreign_key="accounts.id")          # ✅ Fixed
+    to_account_id: UUID = Field(foreign_key="accounts.id")            # ✅ Fixed
     seed_type: str = Field(regex="^(plain_spicy|very_spicy|very_bitter|plain_bitter|very_sweet|plain_sweet)$")
     amount: int = Field(gt=0)
     created_at: Optional[str] = None
+
     session: OptimizationSession = Relationship(back_populates="transfers")

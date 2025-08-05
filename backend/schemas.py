@@ -23,7 +23,7 @@ class PlantTargetOutput(BaseModel):
     strawbst: int
 
 class AccountAllocationOutput(BaseModel):
-    account_id: int
+    account_id: str
     character_name: Optional[str] = None
     parent_account_name: Optional[str] = None
     plants: dict
@@ -31,13 +31,13 @@ class AccountAllocationOutput(BaseModel):
     final_seeds: dict
 
 class TransferOutput(BaseModel):
-    from_account: int
-    to_account: int
+    from_account: str
+    to_account: str
     seed_type: str
     amount: int
 
 class OptimizationRequest(BaseModel):
-    accounts: List[AccountInput]
+    # accounts: List[AccountInput]    # accounts is no longer needed in the request
     grouping_penalty_weight: Optional[int] = 10000
 
 class OptimizationResponse(BaseModel):

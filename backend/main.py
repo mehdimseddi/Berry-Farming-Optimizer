@@ -52,42 +52,52 @@ async def optimize_farming(
     request: OptimizationRequest,
     session: AsyncSession = Depends(get_session)
 ):
-    logger.info(f"Received optimization request with {len(request.accounts)} accounts")
+    logger.info("Received optimization request using all database accounts")
+
     try:
-        accounts = []
-        for acc in request.accounts:
-            # Use existing ID if provided and valid, otherwise generate
-            try:
-                account_id = uuid4() if acc.id is None else uuid.UUID(acc.id)
-            except (ValueError, TypeError):
-                account_id = uuid4()
+        # ✅ Load all accounts from the database
+        db_accounts = await get_all_accounts(session)
+        if not db_accounts:
+            raise HTTPException(status_code=400, detail="No accounts found in database. Please add accounts first.")
 
-            accounts.append(
-                Account(
-                    id=account_id,
-                    seeds=acc.seeds,
-                    character_name=acc.character_name,
-                    parent_account_name=acc.parent_account_name
-                )
+        # Convert ORM models to domain entities (with UUIDs)
+        accounts = [
+            Account(
+                id=acc.id,
+                seeds=[
+                    acc.plain_spicy, acc.very_spicy, acc.very_bitter,
+                    acc.plain_bitter, acc.very_sweet, acc.plain_sweet
+                ],
+                character_name=acc.character_name,
+                parent_account_name=acc.parent_account_name
             )
-        result = farming_service.run(accounts, grouping_penalty_weight=request.grouping_penalty_weight)
+            for acc in db_accounts
+        ]
 
-        # 🌟 Save structured result
+        # Run optimization
+        result = farming_service.run(
+            accounts,
+            grouping_penalty_weight=request.grouping_penalty_weight
+        )
+
+        # ✅ Save result to database
         try:
-            # Convert account list to DB-ready format
-            await save_optimization_result(session, request.dict(), result)
-            logger.info("Optimization result saved to database.")
+            # Convert to dict safely
+            request_dict = request.model_dump()
+            await save_optimization_result(session, request_dict, result)
+            logger.info(f"Optimization saved for {len(accounts)} accounts")
         except Exception as e:
-            logger.warning(f"Failed to save result: {e}")
+            logger.warning(f"Failed to save optimization result: {e}")
 
         return result
 
     except ValueError as ve:
         raise HTTPException(status_code=422, detail=str(ve))
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
+        logger.error(f"Unexpected error during optimization: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
-
+    
+    
 @app.get("/accounts", response_model=List[AccountInput])
 async def load_accounts(session: AsyncSession = Depends(get_session)):
     try:

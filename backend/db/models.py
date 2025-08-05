@@ -1,4 +1,5 @@
 # backend/db/models.py
+from datetime import datetime
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
 from uuid import UUID, uuid4
@@ -27,7 +28,7 @@ class OptimizationSession(SQLModel, table=True):
     total_cheri: Optional[int] = None
     total_pecha: Optional[int] = None
     total_strawbst: Optional[int] = None
-    created_at: Optional[str] = None
+    # created_at: Optional[datetime] = None
     allocations: List["Allocation"] = Relationship(back_populates="session")
     transfers: List["Transfer"] = Relationship(back_populates="session")
 
@@ -58,6 +59,6 @@ class Transfer(SQLModel, table=True):
     to_account_id: UUID = Field(foreign_key="accounts.id")            # ✅ Fixed
     seed_type: str = Field(regex="^(plain_spicy|very_spicy|very_bitter|plain_bitter|very_sweet|plain_sweet)$")
     amount: int = Field(gt=0)
-    created_at: Optional[str] = None
+    # created_at: Optional[datetime] = None
 
     session: OptimizationSession = Relationship(back_populates="transfers")

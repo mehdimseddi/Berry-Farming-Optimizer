@@ -1,7 +1,7 @@
 # backend/db/repository.py
 from .models import Account, OptimizationSession, Allocation, Transfer
 from sqlmodel.ext.asyncio.session import AsyncSession
-from typing import List
+from typing import List, Optional
 from fastapi import HTTPException
 from uuid import UUID
 from sqlmodel import select
@@ -51,6 +51,35 @@ async def add_account(session: AsyncSession, account_data: dict) -> Account:
 async def get_all_accounts(session: AsyncSession) -> List[Account]:
     result = await session.exec(select(Account))
     return result.all()
+
+# backend/db/repository.py
+
+async def update_account_in_db(session: AsyncSession, account_id: UUID, account_data: dict) -> Optional[Account]:
+    """
+    Update an account by ID.
+    Returns the updated Account object or None if not found.
+    """
+    result = await session.exec(select(Account).where(Account.id == account_id))
+    account = result.one_or_none()
+    if not account:
+        return None
+
+    # Update fields
+    account.character_name = account_data.get("character_name", account.character_name)
+    account.parent_account_name = account_data.get("parent_account_name", account.parent_account_name)
+    seeds = account_data.get("seeds")
+    if seeds and len(seeds) == 6:
+        account.plain_spicy = seeds[0]
+        account.very_spicy = seeds[1]
+        account.very_bitter = seeds[2]
+        account.plain_bitter = seeds[3]
+        account.very_sweet = seeds[4]
+        account.plain_sweet = seeds[5]
+
+    session.add(account)
+    await session.commit()
+    await session.refresh(account)
+    return account
 
 # === OPTIMIZATION RESULTS ===
 async def save_optimization_result(

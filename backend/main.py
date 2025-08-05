@@ -14,7 +14,7 @@ from .schemas import AccountInput, OptimizationResponse, OptimizationRequest
 from .logger import logger
 
 from .db.session import get_session
-from .db.repository import add_account, get_all_accounts, save_optimization_result, delete_account, delete_all_accounts, delete_optimization_session
+from .db.repository import add_account, get_all_accounts, save_optimization_result, delete_account, delete_all_accounts, delete_optimization_session, update_account_in_db
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import Path
 
@@ -170,6 +170,49 @@ async def delete_account_route(
         raise
     except Exception as e:
         logger.error(f"Error deleting account {account_id}: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+# backend/main.py
+
+@app.put("/accounts/{account_id}", response_model=AccountInput)
+async def update_account(
+    account_id: str,
+    account_input: AccountInput,
+    session: AsyncSession = Depends(get_session)
+):
+    """
+    Update an existing account by ID.
+    """
+    try:
+        # Validate UUID format
+        try:
+            uuid_id = uuid.UUID(account_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid UUID format")
+
+        updated_account = await update_account_in_db(session, uuid_id, account_input.model_dump())
+        if not updated_account:
+            raise HTTPException(status_code=404, detail="Account not found")
+
+        logger.info(f"Account {account_id} updated successfully.")
+
+        return AccountInput(
+            id=str(updated_account.id),
+            character_name=updated_account.character_name,
+            parent_account_name=updated_account.parent_account_name,
+            seeds=[
+                updated_account.plain_spicy,
+                updated_account.very_spicy,
+                updated_account.very_bitter,
+                updated_account.plain_bitter,
+                updated_account.very_sweet,
+                updated_account.plain_sweet
+            ]
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating account {account_id}: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
     
 @app.delete("/accounts", status_code=200)

@@ -29,14 +29,26 @@ class OptimizationSession(SQLModel, table=True):
     total_pecha: Optional[int] = None
     total_strawbst: Optional[int] = None
     # created_at: Optional[datetime] = None
-    allocations: List["Allocation"] = Relationship(back_populates="session")
-    transfers: List["Transfer"] = Relationship(back_populates="session")
+    allocations: List["Allocation"] = Relationship(
+        back_populates="session",
+        sa_relationship_kwargs={
+            # "cascade": "delete",
+            "passive_deletes": "all"
+        }
+    )
+    transfers: List["Transfer"] = Relationship(
+        back_populates="session",
+        sa_relationship_kwargs={
+            # "cascade": "delete",
+            "passive_deletes": "all"
+        }
+    )
 
 class Allocation(SQLModel, table=True):
     __tablename__ = "allocations"
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    session_id: UUID = Field(foreign_key="optimization_sessions.id")  # ✅ Fixed
-    account_id: UUID = Field(foreign_key="accounts.id")                # ✅ Fixed
+    session_id: UUID = Field(foreign_key="optimization_sessions.id", ondelete="CASCADE")  # ✅ Fixed
+    account_id: UUID = Field(foreign_key="accounts.id", ondelete="CASCADE")                # ✅ Fixed
     leppa: Optional[int] = None
     cheri: Optional[int] = None
     pecha: Optional[int] = None
@@ -54,9 +66,9 @@ class Allocation(SQLModel, table=True):
 class Transfer(SQLModel, table=True):
     __tablename__ = "transfers"
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    session_id: UUID = Field(foreign_key="optimization_sessions.id")  # ✅ Fixed
-    from_account_id: UUID = Field(foreign_key="accounts.id")          # ✅ Fixed
-    to_account_id: UUID = Field(foreign_key="accounts.id")            # ✅ Fixed
+    session_id: UUID = Field(foreign_key="optimization_sessions.id", ondelete="CASCADE")  # ✅ Fixed
+    from_account_id: UUID = Field(foreign_key="accounts.id", ondelete="CASCADE")          # ✅ Fixed
+    to_account_id: UUID = Field(foreign_key="accounts.id", ondelete="CASCADE")            # ✅ Fixed
     seed_type: str = Field(regex="^(plain_spicy|very_spicy|very_bitter|plain_bitter|very_sweet|plain_sweet)$")
     amount: int = Field(gt=0)
     # created_at: Optional[datetime] = None

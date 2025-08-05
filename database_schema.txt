@@ -72,3 +72,16 @@ FOREIGN KEY (from_account_id) REFERENCES accounts(id) ON DELETE CASCADE;
 ALTER TABLE transfers 
 ADD CONSTRAINT transfers_to_account_id_fkey 
 FOREIGN KEY (to_account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+
+-- Drop existing constraints
+ALTER TABLE allocations DROP CONSTRAINT IF EXISTS allocations_session_id_fkey;
+ALTER TABLE transfers DROP CONSTRAINT IF EXISTS transfers_session_id_fkey;
+
+-- Recreate with CASCADE
+ALTER TABLE allocations 
+ADD CONSTRAINT allocations_session_id_fkey 
+FOREIGN KEY (session_id) REFERENCES optimization_sessions(id) ON DELETE CASCADE;
+
+ALTER TABLE transfers 
+ADD CONSTRAINT transfers_session_id_fkey 
+FOREIGN KEY (session_id) REFERENCES optimization_sessions(id) ON DELETE CASCADE;

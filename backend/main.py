@@ -14,7 +14,7 @@ from .schemas import AccountInput, OptimizationResponse, OptimizationRequest
 from .logger import logger
 
 from .db.session import get_session
-from .db.repository import add_account, get_all_accounts, save_optimization_result, delete_account, delete_all_accounts
+from .db.repository import add_account, get_all_accounts, save_optimization_result, delete_account, delete_all_accounts, delete_optimization_session
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import Path
 
@@ -97,7 +97,7 @@ async def optimize_farming(
         logger.error(f"Unexpected error during optimization: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
     
-    
+
 @app.get("/accounts", response_model=List[AccountInput])
 async def load_accounts(session: AsyncSession = Depends(get_session)):
     try:
@@ -182,4 +182,30 @@ async def delete_all_accounts_route(session: AsyncSession = Depends(get_session)
         return {"deleted_count": count, "message": f"Successfully deleted {count} account(s)"}
     except Exception as e:
         logger.error(f"Error deleting all accounts: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+    
+@app.delete("/optimization-sessions/{session_id}", status_code=204)
+async def delete_optimization_session_route(
+    session_id: str = Path(..., description="The UUID of the optimization session to delete"),
+    session: AsyncSession = Depends(get_session)
+):
+    """
+    Delete an optimization session and all related allocations and transfers.
+    """
+    try:
+        # Validate UUID format
+        try:
+            uuid_id = uuid.UUID(session_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid UUID format")
+
+        deleted = await delete_optimization_session(session, uuid_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail="Optimization session not found")
+        
+        return  # 204 No Content
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting optimization session {session_id}: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")

@@ -3,7 +3,7 @@ from .models import Account, OptimizationSession, Allocation, Transfer
 from sqlmodel.ext.asyncio.session import AsyncSession
 from typing import List
 from fastapi import HTTPException
-import uuid
+from uuid import UUID
 from sqlmodel import select
 
 # === ACCOUNTS ===
@@ -73,7 +73,7 @@ async def save_optimization_result(
         # Save allocations
         for alloc in response["allocations"]:
             try:
-                account_id = uuid.UUID(alloc["account_id"])
+                account_id = UUID(alloc["account_id"])
             except ValueError:
                 raise HTTPException(status_code=422, detail=f"Invalid UUID: {alloc['account_id']}")
             allocation = Allocation(
@@ -96,8 +96,8 @@ async def save_optimization_result(
         for tx in response["transfers"]:
             transfer = Transfer(
                 session_id=opt_session.id,
-                from_account_id=uuid.UUID(tx["from_account"]),
-                to_account_id=uuid.UUID(tx["to_account"]),
+                from_account_id=UUID(tx["from_account"]),
+                to_account_id=UUID(tx["to_account"]),
                 seed_type=tx["seed_type"],
                 amount=tx["amount"]
             )
@@ -112,7 +112,7 @@ async def save_optimization_result(
     
 
 # === DELETE ACCOUNTS ===
-async def delete_account(session: AsyncSession, account_id: uuid.UUID) -> bool:
+async def delete_account(session: AsyncSession, account_id: UUID) -> bool:
     """
     Delete a single account by ID.
     Returns True if deleted, False if not found.
@@ -141,3 +141,20 @@ async def delete_all_accounts(session: AsyncSession) -> int:
     
     await session.commit()
     return count
+
+# === OPTIMIZATION SESSIONS ===
+async def delete_optimization_session(session: AsyncSession, session_id: UUID) -> bool:
+    """
+    Delete an optimization session by ID (and its related allocations/transfers via CASCADE).
+    Returns True if deleted, False if not found.
+    """
+    result = await session.exec(
+        select(OptimizationSession).where(OptimizationSession.id == session_id)
+    )
+    opt_session = result.one_or_none()
+    if not opt_session:
+        return False
+
+    await session.delete(opt_session)
+    await session.commit()
+    return True

@@ -1,8 +1,6 @@
 # backend/db/engine.py
 from uuid import uuid4
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
-from sqlalchemy.pool import NullPool
-from sqlmodel import SQLModel
 import os
 from dotenv import load_dotenv
 

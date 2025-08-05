@@ -54,3 +54,21 @@ create table transfers (
   amount int not null check (amount > 0),
   created_at timestamptz default now()
 );
+
+-- Drop existing constraints
+ALTER TABLE allocations DROP CONSTRAINT IF EXISTS allocations_account_id_fkey;
+ALTER TABLE transfers DROP CONSTRAINT IF EXISTS transfers_from_account_id_fkey;
+ALTER TABLE transfers DROP CONSTRAINT IF EXISTS transfers_to_account_id_fkey;
+
+-- Recreate with CASCADE
+ALTER TABLE allocations 
+ADD CONSTRAINT allocations_account_id_fkey 
+FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+
+ALTER TABLE transfers 
+ADD CONSTRAINT transfers_from_account_id_fkey 
+FOREIGN KEY (from_account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+
+ALTER TABLE transfers 
+ADD CONSTRAINT transfers_to_account_id_fkey 
+FOREIGN KEY (to_account_id) REFERENCES accounts(id) ON DELETE CASCADE;

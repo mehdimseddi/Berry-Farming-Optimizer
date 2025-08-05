@@ -1,5 +1,5 @@
 # schemas.py
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import List, Optional
 
 class AccountInput(BaseModel):
@@ -7,6 +7,14 @@ class AccountInput(BaseModel):
     seeds: List[int]  # length 6: [p_spicy, v_spicy, v_bitter, p_bitter, v_sweet, p_sweet]
     character_name: Optional[str] = None
     parent_account_name: Optional[str] = None
+
+    @field_validator('seeds')
+    def check_seeds_length(cls, v):
+        if len(v) != 6:
+            raise ValueError('Seeds must contain exactly 6 integers.')
+        if any(s < 0 for s in v):
+            raise ValueError('Seed counts cannot be negative.')
+        return v
 
 class PlantTargetOutput(BaseModel):
     leppa: int

@@ -25,6 +25,29 @@ async def save_accounts(session: AsyncSession, accounts_data: List[dict]) -> Lis
     await session.commit()
     return db_accounts
 
+async def add_account(session: AsyncSession, account_data: dict) -> Account:
+    """
+    Add a single account to the database.
+    """
+    try:
+        db_acc = Account(
+            character_name=account_data.get("character_name"),
+            parent_account_name=account_data.get("parent_account_name"),
+            plain_spicy=account_data["seeds"][0],
+            very_spicy=account_data["seeds"][1],
+            very_bitter=account_data["seeds"][2],
+            plain_bitter=account_data["seeds"][3],
+            very_sweet=account_data["seeds"][4],
+            plain_sweet=account_data["seeds"][5]
+        )
+        session.add(db_acc)
+        await session.commit()
+        await session.refresh(db_acc)
+        return db_acc
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to save account: {str(e)}")
+    
 async def get_all_accounts(session: AsyncSession) -> List[Account]:
     result = await session.exec(select(Account))
     return result.all()
@@ -86,3 +109,35 @@ async def save_optimization_result(
     except Exception as e:
         await session.rollback()
         raise HTTPException(status_code=500, detail=f"Save failed: {str(e)}")
+    
+
+# === DELETE ACCOUNTS ===
+async def delete_account(session: AsyncSession, account_id: uuid.UUID) -> bool:
+    """
+    Delete a single account by ID.
+    Returns True if deleted, False if not found.
+    """
+    result = await session.exec(select(Account).where(Account.id == account_id))
+    account = result.one_or_none()
+    if not account:
+        return False
+
+    await session.delete(account)
+    await session.commit()
+    return True
+
+
+async def delete_all_accounts(session: AsyncSession) -> int:
+    """
+    Delete all accounts and return the number deleted.
+    Note: Does NOT cascade to allocations/transfers unless DB has ON DELETE CASCADE.
+    """
+    result = await session.exec(select(Account))
+    accounts = result.all()
+    count = len(accounts)
+
+    for account in accounts:
+        await session.delete(account)
+    
+    await session.commit()
+    return count

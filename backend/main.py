@@ -1,5 +1,6 @@
 # main.py
 from fastapi import FastAPI, HTTPException
+from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from typing import List
 import logging
@@ -12,17 +13,26 @@ from .schemas import AccountInput, OptimizationResponse, OptimizationRequest
 from .logger import logger
 
 from fastapi import Depends
-from .supabase_client import get_accounts, save_optimization_result
+from .supabase_client import get_accounts, save_optimization_result, close_supabase_client
 
 # Initialize components
 calculator = RatioBasedPlantCalculator()
 optimizer = FarmingOptimizer(plant_requirements=None)
 farming_service = FarmingService(calculator, optimizer)
 
+# Lifespan context to manage client lifecycle
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Starting up...")
+    yield
+    logger.info("Shutting down...")
+    await close_supabase_client()
+
 app = FastAPI(
     title="Farming Optimization API",
     description="Optimize plant allocation and seed transfers across accounts.",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 @app.get("/")

@@ -49,3 +49,7 @@ async def save_optimization_result(request: dict, response: dict, account_ids: L
     resp = await client.post("/rest/v1/optimization_results", json=data)
     resp.raise_for_status()
     return resp.json()
+
+async def close_supabase_client():
+    """Call this on app shutdown"""
+    await client.aclose()

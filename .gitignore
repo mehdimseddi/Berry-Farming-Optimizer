@@ -1,2 +1,27 @@
 venv
+# Dependencies
+frontend/node_modules/
+backend/node_modules/
+
+# Build outputs
+frontend/dist/
+frontend/build/
+
+# Log files
+*.log
+logs/
+**/coverage/
+
+# Environment files
 .env
+**/.env.local
+**/.env.*.local
+
+# Editor & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Optional caches
+**/.eslintcache

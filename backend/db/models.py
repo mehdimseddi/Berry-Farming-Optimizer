@@ -34,7 +34,7 @@ class OptimizationSession(SQLModel, table=True):
     total_cheri: Optional[int] = None
     total_pecha: Optional[int] = None
     total_strawbst: Optional[int] = None
-    # created_at: Optional[datetime] = None
+    created_at: Optional[datetime] = None
     allocations: List["Allocation"] = Relationship(
         back_populates="session",
         sa_relationship_kwargs={
@@ -79,4 +79,19 @@ class Transfer(SQLModel, table=True):
     amount: int = Field(gt=0)
     # created_at: Optional[datetime] = None
 
+    # Properly configured relationships
+    from_account: "Account" = Relationship(
+        sa_relationship_kwargs={
+            "foreign_keys": "Transfer.from_account_id",
+            "primaryjoin": "Transfer.from_account_id == Account.id",
+            "lazy": "selectin"
+        }
+    )
+    to_account: "Account" = Relationship(
+        sa_relationship_kwargs={
+            "foreign_keys": "Transfer.to_account_id",
+            "primaryjoin": "Transfer.to_account_id == Account.id",
+            "lazy": "selectin"
+        }
+    )
     session: OptimizationSession = Relationship(back_populates="transfers")

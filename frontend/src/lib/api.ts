@@ -36,6 +36,12 @@ export const api = {
         if (!res.ok) throw new Error('Failed to delete account');
     },
 
+    async getLatestOptimization() {
+        const res = await fetch(`${API_BASE}/optimize/latest`);
+        if (!res.ok) throw new Error('Failed to fetch latest optimization');
+        return await res.json();
+    },
+
     async optimize(weight: number = 10000) {
         const res = await fetch(`${API_BASE}/optimize`, {
             method: 'POST',

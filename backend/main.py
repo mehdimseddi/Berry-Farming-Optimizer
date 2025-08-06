@@ -27,7 +27,8 @@ app = FastAPI(
 # ✅ Add CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # 👈 Allow Vite frontend
+    allow_origins=["http://localhost:5173",
+                   "https://berry-farming-optimizer.netlify.app"],  # 👈 Allow Vite frontend
     allow_credentials=True,
     allow_methods=["*"],  # Allows: GET, POST, PUT, DELETE, etc.
     allow_headers=["*"],  # Allows all headers

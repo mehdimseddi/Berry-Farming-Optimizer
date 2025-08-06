@@ -32,7 +32,9 @@ class AccountAllocationOutput(BaseModel):
 
 class TransferOutput(BaseModel):
     from_account: str
+    from_character: Optional[str] = None
     to_account: str
+    to_character: Optional[str] = None
     seed_type: str
     amount: int
 

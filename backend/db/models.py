@@ -17,7 +17,13 @@ class AccountBase(SQLModel):
 class Account(AccountBase, table=True):
     __tablename__ = "accounts"
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    allocations: List["Allocation"] = Relationship(back_populates="account")
+    allocations: List["Allocation"] = Relationship(
+        back_populates="account",
+        sa_relationship_kwargs={
+            # "cascade": "delete",
+            "passive_deletes": "all"
+        }
+    )
 
 class OptimizationSession(SQLModel, table=True):
     __tablename__ = "optimization_sessions"

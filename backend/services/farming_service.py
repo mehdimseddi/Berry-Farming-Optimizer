@@ -94,7 +94,9 @@ class FarmingService:
                     if val > 0:
                         transfers.append({
                             "from_account": str(from_acc.id),   # ← UUID
+                            "from_character": from_acc.character_name,
                             "to_account": str(to_acc.id),       # ← UUID
+                            "to_character": to_acc.character_name,
                             "seed_type": seed_names[s],
                             "amount": val
                         })

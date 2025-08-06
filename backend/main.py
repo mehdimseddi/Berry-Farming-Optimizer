@@ -2,6 +2,7 @@
 from uuid import uuid4
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
+from fastapi.middleware.cors import CORSMiddleware
 
 from .logger import logger
 
@@ -21,6 +22,15 @@ app = FastAPI(
     description="Optimize plant allocation and seed transfers across accounts.",
     version="1.0.0",
     lifespan=lifespan
+)
+
+# ✅ Add CORS Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # 👈 Allow Vite frontend
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows: GET, POST, PUT, DELETE, etc.
+    allow_headers=["*"],  # Allows all headers
 )
 
 app.include_router(accounts.router)         # GET/POST /accounts

@@ -1,5 +1,5 @@
 # backend/db/models.py
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
 from uuid import UUID, uuid4
@@ -34,7 +34,7 @@ class OptimizationSession(SQLModel, table=True):
     total_cheri: Optional[int] = None
     total_pecha: Optional[int] = None
     total_strawbst: Optional[int] = None
-    created_at: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now())
     allocations: List["Allocation"] = Relationship(
         back_populates="session",
         sa_relationship_kwargs={

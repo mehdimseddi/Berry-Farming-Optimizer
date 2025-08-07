@@ -5,10 +5,13 @@ import { OptimizationResults } from "./components/OptimizationResults";
 import { api } from "./lib/api";
 import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/sonner"
+import { toast } from "sonner";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./components/ui/alert-dialog";
 
 function App() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [editingAccount, setEditingAccount] = useState<any>(null);
+  const [deletingAll, setDeletingAll] = useState(false);
 
   const handleRefresh = () => {
     setRefreshKey((prev) => prev + 1);
@@ -16,9 +19,18 @@ function App() {
   };
 
   const handleDeleteAll = async () => {
-    if (confirm("Delete all accounts?")) {
+    setDeletingAll(false);
+    try {
       await api.deleteAllAccounts();
+      toast.success("All accounts deleted", {
+        description: "Your farm has been reset.",
+      });
       handleRefresh();
+
+    } catch (err: any) {
+      toast.error("Delete failed", {
+        description: err.message || "Failed to delete all accounts.",
+      });
     }
   };
 
@@ -37,9 +49,26 @@ function App() {
               editingAccount={editingAccount}
               onCancelEdit={() => setEditingAccount(null)}
             />
-            <Button variant="neutral" onClick={handleDeleteAll}>
-              Delete All Accounts
-            </Button>
+            <AlertDialog open={deletingAll} onOpenChange={setDeletingAll}>
+              <AlertDialogTrigger asChild>
+                <Button variant="neutral">Delete All Accounts</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will <span className="font-bold text-destructive">permanently delete all accounts</span> and their data.
+                    This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteAll}>
+                    Delete All
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
 
           <div className="overflow-x-auto">

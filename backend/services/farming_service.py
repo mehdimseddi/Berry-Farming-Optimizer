@@ -83,8 +83,9 @@ class FarmingService:
             total = 0
             for p, name in enumerate(plant_names):
                 count = sol["plant_alloc"][j][p]
-                if count > 0:
-                    plants[name] = count
+                # if count > 0:
+                #     plants[name] = count
+                plants[name] = count
                 total += count
             final_seeds = {seed_names[s]: sol["final_seeds"][j][s] for s in range(6)}
             allocations.append({

@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { TargetComparisonChart } from "./TargetComparisonChart";
 import { SeedShortageDisplay } from "./SeedShortageDisplay";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AccordionAllocations } from "./EnhancedAllocationsTable";
+import { EnhancedTransfersList } from "./EnhancedTransfersList";
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -18,7 +21,6 @@ export function OptimizationResults() {
         setLoading(true);
         try {
             const res = await api.optimize(groupingPenalty); // Pass dynamic weight
-
             if (!res.success) {
                 toast.error("Optimization Failed", {
                     description: res.message || "No feasible solution found.",
@@ -39,6 +41,7 @@ export function OptimizationResults() {
         setLoading(true);
         try {
             const res = await api.getLatestOptimization();
+            console.log(JSON.stringify(res, null, 2));
             if (res.success) {
                 setResult(res);
                 toast.success("Latest results loaded");
@@ -67,8 +70,11 @@ export function OptimizationResults() {
                         <label className="text-sm font-medium">Grouping Penalty: {groupingPenalty}</label>
                         <Slider
                             value={[groupingPenalty]}
-                            onValueChange={(vals) => setGroupingPenalty(vals[0])}
-                            min={1}
+                            onValueChange={(vals) => {
+                                const snappedValue = Math.round(vals[0] / 1000) * 1000;
+                                setGroupingPenalty(snappedValue === 0 ? 1 : snappedValue)
+                            }
+                            }
                             max={50000}
                             step={1000}
                             className="w-full"
@@ -104,7 +110,7 @@ export function OptimizationResults() {
                         <p>{result.message || "An unknown error occurred."}</p>
                     </div>
                 ) : (
-                    <>
+                    <div className="space-y-6">
                         {/* <div>
                             <h3 className="font-heading">Targets</h3>
                             <p>
@@ -116,40 +122,21 @@ export function OptimizationResults() {
                         </div> */}
                         <TargetComparisonChart result={result} />
                         <SeedShortageDisplay seedShortage={result.seed_shortage} />
-                        <div>
-                            <h3 className="font-heading">Allocations</h3>
-                            {result.allocations && result.allocations.length > 0 ? (
-                                <ul className="text-sm space-y-1">
-                                    {result.allocations.map((a: any) => (
-                                        <li key={a.account_id}>
-                                            {a.character_name || "Unknown"} →{" "}
-                                            {Object.entries(a.plants)
-                                                .map(([k, v]) => `${k}(${v})`)
-                                                .join(", ")}
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <p>No plants allocated.</p>
-                            )}
-                        </div>
+                        <Tabs defaultValue="allocations" className="w-full">
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="allocations">Plant Allocations</TabsTrigger>
+                                <TabsTrigger value="transfers">Seed Transfers</TabsTrigger>
+                            </TabsList>
 
-                        <div>
-                            <h3 className="font-heading">Seed Transfers</h3>
-                            {result.transfers && result.transfers.length > 0 ? (
-                                <ul className="text-sm space-y-1">
-                                    {result.transfers.map((t: any, i: number) => (
-                                        <li key={i}>
-                                            {t.amount} {t.seed_type} → {t.to_character || "Unknown"}
-                                            {' '} from {t.from_character || "Unknown"}
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <p>No transfers needed.</p>
-                            )}
-                        </div>
-                    </>
+                            <TabsContent value="allocations">
+                                <AccordionAllocations allocations={result.allocations} />
+                            </TabsContent>
+
+                            <TabsContent value="transfers">
+                                <EnhancedTransfersList transfers={result.transfers} />
+                            </TabsContent>
+                        </Tabs>
+                    </div>
                 )}
             </CardContent>
             <CardFooter>

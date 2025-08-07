@@ -103,11 +103,11 @@ export function AccountForm({
                 <Input value={parent} onChange={(e) => setParent(e.target.value)} />
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-2 gap-y-1">
                 {["Plain Spicy", "Very Spicy", "Very Bitter", "Plain Bitter", "Very Sweet", "Plain Sweet"].map(
                     (label, i) => (
-                        <div key={i}>
-                            <Label>{label}</Label>
+                        <div key={i} className="flex flex-col">
+                            <Label className="text-xs font-medium">{label}</Label>
                             <Input
                                 type="number"
                                 value={seeds[i]}

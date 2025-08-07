@@ -18,7 +18,7 @@ class FarmingService:
 
     def run(self, accounts: List[Account], grouping_penalty_weight: int = 10000) -> dict:
         try:
-            target_plants = self.calculator.calculate(accounts, PLANT_TARGETS)
+            target_plants, ideal_target, shortfall = self.calculator.calculate(accounts, PLANT_TARGETS)
             plant_targets_ordered = [int(x) for x in [target_plants[0], target_plants[1], target_plants[2], target_plants[3]]]
 
             requirements_matrix = np.array([
@@ -27,6 +27,11 @@ class FarmingService:
                  p.requirements.very_sweet, p.requirements.plain_sweet]
                 for p in PLANT_TARGETS
             ])
+            
+            # Only show positive values (deficit); 0 if surplus
+            seed_shortage = {seed_name: int(max(0, short)) 
+                            for seed_name, short in zip(SEED_NAMES, shortfall)}
+            
             self.optimizer.plant_requirements = requirements_matrix
 
             result = self.optimizer.solve(accounts,
@@ -44,6 +49,13 @@ class FarmingService:
                         "pecha": plant_targets_ordered[2],
                         "strawbst": plant_targets_ordered[3]
                     },
+                    "ideal_targets": {
+                    "leppa": int(ideal_target[0]),
+                    "cheri": int(ideal_target[1]),
+                    "pecha": int(ideal_target[2]),
+                    "strawbst": int(ideal_target[3])
+                },
+                "seed_shortage": seed_shortage,
                     "allocations": structured["allocations"],
                     "transfers": structured["transfers"],
                     "status_code": 200

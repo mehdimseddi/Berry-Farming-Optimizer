@@ -8,13 +8,13 @@ from ..logger import logger
 
 class PlantTargetCalculator(ABC):
     @abstractmethod
-    def calculate(self, accounts: List[Account], plant_targets: List[PlantTarget]) -> np.ndarray:
+    def calculate(self, accounts: List[Account], plant_targets: List[PlantTarget]) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         pass
 
 # core/plant_calculator.py
 
 class RatioBasedPlantCalculator(PlantTargetCalculator):
-    def calculate(self, accounts: List[Account], plant_targets: List[PlantTarget]) -> np.ndarray:
+    def calculate(self, accounts: List[Account], plant_targets: List[PlantTarget]) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         total_seeds = np.sum([acc.seeds for acc in accounts], axis=0)
         requirements = np.array([
             [r.plain_spicy, r.very_spicy, r.very_bitter, r.plain_bitter, r.very_sweet, r.plain_sweet]
@@ -23,7 +23,7 @@ class RatioBasedPlantCalculator(PlantTargetCalculator):
         ratios = np.array([p.ratio for p in plant_targets])
 
         num_accounts = len(accounts)
-        max_total_plants = num_accounts * 156  # MAX_PLANTS_PER_ACCOUNT
+        max_total_plants = num_accounts * MAX_PLANTS_PER_ACCOUNT  # MAX_PLANTS_PER_ACCOUNT
 
         # Step 1: Binary search on scaling factor to find max feasible target
 
@@ -66,4 +66,16 @@ class RatioBasedPlantCalculator(PlantTargetCalculator):
                 high = mid - 1
         logger.info(f"available seeds: {[acc.seeds for acc in accounts]}")
         logger.info(f"Final feasible target plants: {best}")
-        return best
+
+
+        # Scale ratios to max possible without seed constraints
+        ideal_scale = max_total_plants / sum(ratios)
+        ideal_target = np.floor(ratios * ideal_scale).astype(int)
+
+        # === 3. Compute Seeds Needed for IDEAL Target ===
+        required_seeds_for_ideal = ideal_target @ requirements  # Shape: [6]
+
+        # === 4. Compute Shortfall ===
+        shortfall = required_seeds_for_ideal - total_seeds
+        
+        return best, ideal_target, shortfall

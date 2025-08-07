@@ -3,6 +3,8 @@
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { TargetComparisonChart } from "./TargetComparisonChart";
+import { SeedShortageDisplay } from "./SeedShortageDisplay";
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -90,6 +92,7 @@ export function OptimizationResults() {
 
     // Show result (same as before, with success check)
     return (
+
         <Card>
             <CardHeader>
                 <CardTitle>Optimization Results</CardTitle>
@@ -102,7 +105,7 @@ export function OptimizationResults() {
                     </div>
                 ) : (
                     <>
-                        <div>
+                        {/* <div>
                             <h3 className="font-heading">Targets</h3>
                             <p>
                                 Leppa: {result.targets.leppa},
@@ -110,8 +113,9 @@ export function OptimizationResults() {
                                 Pecha: {result.targets.pecha},
                                 Strawbst: {result.targets.strawbst}
                             </p>
-                        </div>
-
+                        </div> */}
+                        <TargetComparisonChart result={result} />
+                        <SeedShortageDisplay seedShortage={result.seed_shortage} />
                         <div>
                             <h3 className="font-heading">Allocations</h3>
                             {result.allocations && result.allocations.length > 0 ? (

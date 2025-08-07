@@ -31,7 +31,7 @@ function App() {
       <div className="container mx-auto p-6 max-w-5xl space-y-8">
         <h1 className="font-heading text-3xl">🌱 Berry Farming Optimizer</h1>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
           <div className="space-y-6">
             <AccountForm onAccountSaved={handleRefresh}
               editingAccount={editingAccount}
@@ -42,7 +42,7 @@ function App() {
             </Button>
           </div>
 
-          <div>
+          <div className="overflow-x-auto">
             <AccountsTable onRefresh={handleRefresh}
               onEditAccount={setEditingAccount}
             />

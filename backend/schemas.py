@@ -46,6 +46,8 @@ class OptimizationResponse(BaseModel):
     success: bool
     message: str
     targets: Optional[PlantTargetOutput] = None
+    ideal_targets: Optional[PlantTargetOutput] = None
+    seed_shortage: Optional[dict] = None
     allocations: Optional[List[AccountAllocationOutput]] = None
     transfers: Optional[List[TransferOutput]] = None
     status_code: int

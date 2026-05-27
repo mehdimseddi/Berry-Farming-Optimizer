@@ -3,8 +3,11 @@ from uuid import uuid4
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
+from sqlmodel import SQLModel
 
 from .logger import logger
+from .db.engine import engine
+from .db.models import Account, OptimizationSession, Allocation, Transfer
 
 from .api import accounts, optimization
 
@@ -13,7 +16,8 @@ from .api import accounts, optimization
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting up...")
-    # You can run migrations here later
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
     yield
     logger.info("Shutting down...")
 
